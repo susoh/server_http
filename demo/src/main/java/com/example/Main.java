@@ -6,7 +6,8 @@ import java.io.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        ServerSocket ss = new ServerSocket(8080);
+        ServerSocket ss = new ServerSocket(80);
+        System.out.println("Server aperto su http://127.0.0.1/");
 
         while (true) {
             Socket s = ss.accept();
@@ -19,11 +20,20 @@ public class Main {
                 continue;
             }
 
+            System.out.println("Richiesta: " + primaRiga);
+
             String[] parti = primaRiga.split(" ");
+            if (parti.length < 2) {
+                out.writeBytes("HTTP/1.1 400 Bad Request\nContent-Type: text/plain\n\nRichiesta malformata.\n");
+                s.close();
+                continue;
+            }
+
             String metodo = parti[0];
             String risorsa = parti[1];
+
             if (!metodo.equals("GET")) {
-                out.writeBytes("HTTP/1.1 405 Method Not Allowed\nContent-Type: text/plain\n\nMetodo non supportato.");
+                out.writeBytes("HTTP/1.1 405 Method Not Allowed\nContent-Type: text/plain\n\nMetodo non supportato.\n");
                 s.close();
                 continue;
             }
@@ -32,9 +42,9 @@ public class Main {
                 risorsa = "/index.html";
             }
 
-            File file = new File("../../../../htdocs" + risorsa);
+            File file = new File("htdocs", risorsa.substring(1));
 
-            if (file.exists() && file.isFile()) {
+            if (file.exists()) {
                 String contentType = getContentType(risorsa);
                 out.writeBytes("HTTP/1.1 200 OK\n");
                 out.writeBytes("Content-Length: " + file.length() + "\n");
@@ -48,7 +58,7 @@ public class Main {
                     }
                 }
             } else {
-                out.writeBytes("HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\nFile non trovato.");
+                out.writeBytes("HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\nFile non trovato.\n");
             }
 
             s.close();
@@ -61,6 +71,6 @@ public class Main {
         if (risorsa.endsWith(".js")) return "application/javascript";
         if (risorsa.endsWith(".png")) return "image/png";
         if (risorsa.endsWith(".jpg") || risorsa.endsWith(".jpeg")) return "image/jpeg";
-        return "application/octet-stream";
+        return "text/plain";
     }
 }
