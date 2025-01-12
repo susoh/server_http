@@ -59,20 +59,26 @@ public class Main {
                     out.writeBytes(responseBody);
                 break;
                 }*/
-                File file = new File("../../../../htdocs/index.html");
+               File file = new File("../../../../htdocs/index.html");
+                System.out.println("Resolved path: " + file.getAbsolutePath()); // Debugging
+
                 if (file.exists()) {
                     out.writeBytes("HTTP/1.1 200 OK\n");
-                    out.writeBytes("Content-Lenght: " + file.length() + "\n");
+                    out.writeBytes("Content-Length: " + file.length() + "\n"); // Fixed typo
                     out.writeBytes("Content-Type: text/html\n");
                     out.writeBytes("\n");
-                    InputStream input = new FileInputStream(file);
+    
+                try (InputStream input = new FileInputStream(file)) { // Use try-with-resources
                     byte[] buf = new byte[8192];
                     int n;
                     while ((n = input.read(buf)) != -1) {
-                        out.write(buf, 0, n);
-                    }
-                    input.close();
-                }
+                    out.write(buf, 0, n);
+                }    
+            }
+        } else {
+            out.writeBytes("HTTP/1.1 404 Not Found\n");
+            out.writeBytes("Content-Type: text/plain\n\n");
+            out.writeBytes("File not found.");
         }
+     }
     }
-}
